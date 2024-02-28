@@ -1,29 +1,33 @@
-from openai import OpenAI
+# Load model directly
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import streamlit as st
+import requests
+
+tokenizer = AutoTokenizer.from_pretrained("facebook/blenderbot-400M-distill")
+model = AutoModelForSeq2SeqLM.from_pretrained("facebook/blenderbot-400M-distill")
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
-    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
-    "[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)"
-    "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
+     "[View the source code](https://github.com/abdulrafae/chatty/blob/main/streamlit_app.py)"
 
-st.title("💬 Chatbot")
-st.caption("🚀 A streamlit chatbot powered by OpenAI LLM")
+st.title("💬 Chatty")
+st.caption("🚀 A custom chatbot powered by BlenderBot LLM")
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-if prompt := st.chat_input():
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
-        st.stop()
+API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
+headers = {"Authorization": "Bearer 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"}
 
-    client = OpenAI(api_key=openai_api_key)
+def query(payload):
+	response = requests.post(API_URL, headers=headers, json=payload)
+	return response.json()
+    
+if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-    msg = response.choices[0].message.content
+    response = query({"inputs":prompt})
+    msg = response #response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
