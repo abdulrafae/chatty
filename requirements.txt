@@ -3,3 +3,8 @@ torch
 torchvision
 transformers
 requests
+langchain
+duckduckgo-search
+anthropic
+trubrics
+streamlit-feedback
